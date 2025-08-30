@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
         // Clean the response text (remove any potential markdown or extra characters)
         const cleanedText = text.replace(/```json\n?|```\n?/g, '').trim()
         recipeData = JSON.parse(cleanedText)
-      } catch (parseError) {
+      } catch {
         console.error('Failed to parse Gemini response:', text)
         return NextResponse.json(
           { error: 'AI 응답을 파싱하는데 실패했습니다. 다시 시도해주세요.' },

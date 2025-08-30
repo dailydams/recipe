@@ -1,7 +1,6 @@
 'use client'
 
-import { Clock, Users, ChefHat, Edit2, Trash2, MoreHorizontal } from 'lucide-react'
-import { useState } from 'react'
+import { Clock, ChefHat, Edit2, Trash2, MoreHorizontal } from 'lucide-react'
 import { Menu, Transition } from '@headlessui/react'
 import { Fragment } from 'react'
 import { cn } from '@/lib/utils'

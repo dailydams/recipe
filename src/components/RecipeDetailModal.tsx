@@ -2,7 +2,7 @@
 
 import { Fragment } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
-import { X, Clock, Users, ChefHat } from 'lucide-react'
+import { X, Clock, ChefHat } from 'lucide-react'
 import { Recipe } from '@/lib/supabase'
 
 interface RecipeDetailModalProps {

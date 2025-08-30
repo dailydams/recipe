@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Plus, BookOpen } from 'lucide-react'
+import { Plus, BookOpen } from 'lucide-react'
 import AddRecipeModal from '@/components/AddRecipeModal'
 import RecipeGrid from '@/components/RecipeGrid'
 import SearchBar from '@/components/SearchBar'

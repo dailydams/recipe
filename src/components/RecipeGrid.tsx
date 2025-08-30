@@ -56,7 +56,7 @@ export default function RecipeGrid({ searchQuery }: RecipeGridProps) {
   }
 
   const handleDelete = async (recipe: Recipe) => {
-    if (!confirm(`"${recipe.title}" 레시피를 삭제하시겠습니까?`)) {
+    if (!confirm(`&quot;${recipe.title}&quot; 레시피를 삭제하시겠습니까?`)) {
       return
     }
 

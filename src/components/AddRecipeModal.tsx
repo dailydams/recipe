@@ -2,7 +2,7 @@
 
 import { useState, Fragment } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
-import { X, Upload, Loader2, Image as ImageIcon } from 'lucide-react'
+import { X, Upload, Loader2 } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import { cn } from '@/lib/utils'
 
