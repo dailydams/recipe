@@ -3,7 +3,7 @@
 import { Fragment } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { X, Clock, ChefHat } from 'lucide-react'
-import { Recipe } from '@/lib/supabase'
+import { Recipe } from '@/types'
 
 interface RecipeDetailModalProps {
   isOpen: boolean
@@ -15,7 +15,7 @@ export default function RecipeDetailModal({ isOpen, onClose, recipe }: RecipeDet
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ko-KR', {
       year: 'numeric',
-      month: 'long', 
+      month: 'long',
       day: 'numeric'
     })
   }
@@ -32,6 +32,12 @@ export default function RecipeDetailModal({ isOpen, onClose, recipe }: RecipeDet
         return (
           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 border border-blue-200">
             이미지
+          </span>
+        )
+      case 'manual':
+        return (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-orange-100 to-amber-100 text-orange-800 border border-orange-200">
+            직접 작성
           </span>
         )
       default:
@@ -74,14 +80,14 @@ export default function RecipeDetailModal({ isOpen, onClose, recipe }: RecipeDet
                   >
                     <X className="w-5 h-5" />
                   </button>
-                  
+
                   <div className="pr-12">
                     <div className="flex items-center space-x-3 mb-3">
                       <h1 className="text-xl sm:text-2xl font-bold text-gray-900 line-clamp-2">
                         {recipe.title}
                       </h1>
                     </div>
-                    
+
                     <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
                       <div className="flex items-center space-x-1">
                         <ChefHat className="w-4 h-4" />
@@ -93,7 +99,7 @@ export default function RecipeDetailModal({ isOpen, onClose, recipe }: RecipeDet
                       </div>
                       {getSourceBadge(recipe.source_type)}
                     </div>
-                    
+
                     <p className="text-xs text-gray-500 mt-2">
                       {formatDate(recipe.created_at)} 추가
                     </p>

@@ -5,10 +5,12 @@ import { Plus, BookOpen } from 'lucide-react'
 import AddRecipeModal from '@/components/AddRecipeModal'
 import RecipeGrid from '@/components/RecipeGrid'
 import SearchBar from '@/components/SearchBar'
+import CategoryFilter from '@/components/CategoryFilter'
 
 export default function Home() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('전체')
 
   return (
     <div className="min-h-screen bg-gray-50/50">
@@ -56,8 +58,17 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Category Filter */}
+        <CategoryFilter 
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+        />
+
         {/* Recipe Grid */}
-        <RecipeGrid searchQuery={searchQuery} />
+        <RecipeGrid 
+          searchQuery={searchQuery} 
+          selectedCategory={selectedCategory}
+        />
       </main>
 
       {/* Add Recipe Modal */}

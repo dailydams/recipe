@@ -41,3 +41,15 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+.env*.local
+
+# local debug & one-off scripts
+.cache/
+build-log.txt
+migration-log.txt
+vercel-debug-log*.txt
+debug-*.txt
+debug-*.js
+debug-*.ts
+init-sheet.js
+list-sheets.js

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase, Recipe } from '@/lib/supabase'
+import { Recipe } from '@/types'
 import RecipeCard from './RecipeCard'
 import EditRecipeModal from './EditRecipeModal'
 import RecipeDetailModal from './RecipeDetailModal'
@@ -9,9 +9,10 @@ import { Loader2, ChefHat } from 'lucide-react'
 
 interface RecipeGridProps {
   searchQuery: string
+  selectedCategory: string
 }
 
-export default function RecipeGrid({ searchQuery }: RecipeGridProps) {
+export default function RecipeGrid({ searchQuery, selectedCategory }: RecipeGridProps) {
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -26,18 +27,13 @@ export default function RecipeGrid({ searchQuery }: RecipeGridProps) {
     try {
       setLoading(true)
       setError(null)
-      
-      if (!supabase) {
-        setError('Database connection not configured. Please set up Supabase credentials.')
-        return
+
+      const response = await fetch('/api/recipes')
+      if (!response.ok) {
+        throw new Error('Failed to fetch recipes')
       }
 
-      const { data, error } = await supabase
-        .from('recipes')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
+      const data = await response.json()
       setRecipes(data || [])
     } catch (err) {
       console.error('Error loading recipes:', err)
@@ -61,17 +57,13 @@ export default function RecipeGrid({ searchQuery }: RecipeGridProps) {
     }
 
     try {
-      if (!supabase) {
-        setError('데이터베이스 연결이 구성되지 않았습니다.')
-        return
+      const response = await fetch(`/api/recipes/${recipe.id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete recipe')
       }
-
-      const { error: deleteError } = await supabase
-        .from('recipes')
-        .delete()
-        .eq('id', recipe.id)
-
-      if (deleteError) throw deleteError
 
       // Remove recipe from local state
       setRecipes(prev => prev.filter(r => r.id !== recipe.id))
@@ -85,14 +77,20 @@ export default function RecipeGrid({ searchQuery }: RecipeGridProps) {
     loadRecipes() // Reload recipes after edit
   }
 
-  // Filter recipes based on search query
+  // Filter recipes based on search query and category
   const filteredRecipes = recipes.filter((recipe) => {
+    // Category filter
+    if (selectedCategory !== '전체' && recipe.category !== selectedCategory) {
+      return false
+    }
+
+    // Search query filter
     if (!searchQuery) return true
-    
+
     const query = searchQuery.toLowerCase()
     return (
       recipe.title.toLowerCase().includes(query) ||
-      recipe.ingredients.some(ingredient => 
+      recipe.ingredients.some(ingredient =>
         ingredient.toLowerCase().includes(query)
       )
     )
@@ -138,7 +136,7 @@ export default function RecipeGrid({ searchQuery }: RecipeGridProps) {
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">검색 결과가 없어요</h3>
           <p className="text-gray-600">
-            "{searchQuery}"와 일치하는 레시피가 없어요. 다른 재료로 검색해보세요.
+            &quot;{searchQuery}&quot;와 일치하는 레시피가 없어요. 다른 재료로 검색해보세요.
           </p>
         </div>
       </div>
@@ -165,9 +163,9 @@ export default function RecipeGrid({ searchQuery }: RecipeGridProps) {
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
         {filteredRecipes.map((recipe) => (
-          <RecipeCard 
-            key={recipe.id} 
-            recipe={recipe} 
+          <RecipeCard
+            key={recipe.id}
+            recipe={recipe}
             onEdit={handleEdit}
             onDelete={handleDelete}
             onClick={handleRecipeClick}

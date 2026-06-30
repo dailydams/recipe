@@ -4,7 +4,7 @@ import { Clock, ChefHat, Edit2, Trash2, MoreHorizontal } from 'lucide-react'
 import { Menu, Transition } from '@headlessui/react'
 import { Fragment } from 'react'
 import { cn } from '@/lib/utils'
-import { Recipe } from '@/lib/supabase'
+import { Recipe } from '@/types'
 
 interface RecipeCardProps {
   recipe: Recipe
@@ -18,7 +18,7 @@ export default function RecipeCard({ recipe, className, onEdit, onDelete, onClic
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ko-KR', {
       year: 'numeric',
-      month: 'long', 
+      month: 'long',
       day: 'numeric'
     })
   }
@@ -37,6 +37,12 @@ export default function RecipeCard({ recipe, className, onEdit, onDelete, onClic
             이미지
           </span>
         )
+      case 'manual':
+        return (
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-orange-100 to-amber-100 text-orange-800 border border-orange-200">
+            직접 작성
+          </span>
+        )
       default:
         return null
     }
@@ -51,7 +57,7 @@ export default function RecipeCard({ recipe, className, onEdit, onDelete, onClic
   }
 
   return (
-    <div 
+    <div
       className={cn(
         "group bg-white rounded-2xl shadow-sm hover:shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 hover:-translate-y-2 cursor-pointer select-none",
         className
@@ -123,7 +129,7 @@ export default function RecipeCard({ recipe, className, onEdit, onDelete, onClic
             )}
           </div>
         </div>
-        
+
         <div className="flex items-center text-sm text-gray-500 mb-4">
           <ChefHat className="w-4 h-4 mr-1" />
           <span>재료 {recipe.ingredients.length}개</span>

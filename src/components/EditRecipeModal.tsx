@@ -3,7 +3,7 @@
 import { useState, Fragment } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { X, Plus, Trash2, Save } from 'lucide-react'
-import { supabase, Recipe } from '@/lib/supabase'
+import { Recipe } from '@/types'
 
 interface EditRecipeModalProps {
   isOpen: boolean
@@ -16,6 +16,7 @@ export default function EditRecipeModal({ isOpen, onClose, recipe, onRecipeUpdat
   const [title, setTitle] = useState(recipe.title)
   const [ingredients, setIngredients] = useState<string[]>([...recipe.ingredients])
   const [instructions, setInstructions] = useState<string[]>([...recipe.instructions])
+  const [category, setCategory] = useState<'전체' | '소담' | '어른'>(recipe.category)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -26,6 +27,7 @@ export default function EditRecipeModal({ isOpen, onClose, recipe, onRecipeUpdat
     setTitle(recipe.title)
     setIngredients([...recipe.ingredients])
     setInstructions([...recipe.instructions])
+    setCategory(recipe.category)
     onClose()
   }
 
@@ -80,20 +82,22 @@ export default function EditRecipeModal({ isOpen, onClose, recipe, onRecipeUpdat
     setError(null)
 
     try {
-      if (!supabase) {
-        throw new Error('데이터베이스 연결이 구성되지 않았습니다.')
-      }
-
-      const { error: updateError } = await supabase
-        .from('recipes')
-        .update({
+      const response = await fetch(`/api/recipes/${recipe.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           title: title.trim(),
           ingredients: filteredIngredients,
-          instructions: filteredInstructions
-        })
-        .eq('id', recipe.id)
+          instructions: filteredInstructions,
+          category: category
+        }),
+      })
 
-      if (updateError) throw updateError
+      if (!response.ok) {
+        throw new Error('Failed to update recipe')
+      }
 
       onRecipeUpdated()
       handleClose()
@@ -157,6 +161,23 @@ export default function EditRecipeModal({ isOpen, onClose, recipe, onRecipeUpdat
                       placeholder="레시피 제목을 입력하세요"
                       disabled={isLoading}
                     />
+                  </div>
+
+                  {/* Category Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      카테고리
+                    </label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value as '전체' | '소담' | '어른')}
+                      disabled={isLoading}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-900"
+                    >
+                      <option value="전체">🍽️ 전체</option>
+                      <option value="소담">👶 소담</option>
+                      <option value="어른">👨‍🍳 어른</option>
+                    </select>
                   </div>
 
                   {/* Ingredients */}

@@ -1,23 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { supabase } from '@/lib/supabase'
+import { addRecipe } from '@/lib/google-sheets'
 
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || '')
 
 export async function POST(request: NextRequest) {
   try {
+    // Debug logging for environment variables
+    console.log('Environment check:', {
+      hasGoogleApiKey: !!process.env.GOOGLE_API_KEY,
+      keyLength: process.env.GOOGLE_API_KEY?.length || 0,
+      keyPrefix: process.env.GOOGLE_API_KEY?.substring(0, 10) || 'none'
+    })
+
     // Check if API key is configured
     if (!process.env.GOOGLE_API_KEY || process.env.GOOGLE_API_KEY === 'your-gemini-api-key-here') {
       return NextResponse.json(
-        { error: 'Google API Key가 설정되지 않았습니다. .env.local 파일에서 GOOGLE_API_KEY를 설정해주세요.' },
+        { error: 'Google API Key가 설정되지 않았습니다. Vercel 환경 변수를 확인해주세요.' },
         { status: 500 }
       )
     }
 
     const formData = await request.formData()
     const image = formData.get('image') as File
-    
+    const category = formData.get('category') as string || '전체'
+
     if (!image) {
       return NextResponse.json(
         { error: '이미지 파일이 제공되지 않았습니다.' },
@@ -49,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     try {
       // Get Gemini Pro Vision model
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+      const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' })
 
       // Create the prompt for recipe extraction
       const promptText = [
@@ -72,7 +80,7 @@ export async function POST(request: NextRequest) {
         "If no recipe found, return:",
         '{"title": "", "ingredients": [], "instructions": []}'
       ].join('\n')
-      
+
       const prompt = promptText
 
       // Analyze image with Gemini
@@ -88,7 +96,7 @@ export async function POST(request: NextRequest) {
 
       const response = await result.response
       const text = response.text()
-      
+
       console.log('Gemini response:', text)
 
       // Parse JSON response
@@ -128,33 +136,18 @@ export async function POST(request: NextRequest) {
         instructionCount: recipeData.instructions.length
       })
 
-      // Save to database
-      if (!supabase) {
-        return NextResponse.json(
-          { error: '데이터베이스 연결이 구성되지 않았습니다.' },
-          { status: 500 }
-        )
-      }
+      // Save to Google Sheets
+      const savedRecipe = await addRecipe({
+        title: recipeData.title,
+        ingredients: recipeData.ingredients,
+        instructions: recipeData.instructions,
+        source: `gemini_${Date.now()}.${image.name.split('.').pop()}`,
+        source_type: 'image',
+        category: category as '전체' | '소담' | '어른',
+      })
 
-      const { data: savedRecipe, error: dbError } = await supabase
-        .from('recipes')
-        .insert({
-          title: recipeData.title,
-          ingredients: recipeData.ingredients,
-          instructions: recipeData.instructions,
-          source: `gemini_${Date.now()}.${image.name.split('.').pop()}`,
-          source_type: 'image',
-          raw_content: text
-        })
-        .select()
-        .single()
-
-      if (dbError) {
-        console.error('Database error:', dbError)
-        return NextResponse.json(
-          { error: '레시피를 데이터베이스에 저장하는데 실패했습니다.' },
-          { status: 500 }
-        )
+      if (!savedRecipe) {
+        throw new Error('Failed to save recipe to Google Sheets')
       }
 
       return NextResponse.json({
@@ -165,8 +158,19 @@ export async function POST(request: NextRequest) {
 
     } catch (aiError) {
       console.error('Gemini AI error:', aiError)
+      console.error('Error details:', {
+        name: (aiError as Error)?.name,
+        message: (aiError as Error)?.message,
+        stack: (aiError as Error)?.stack,
+      })
+
+      // Return more specific error message for debugging
+      const errorMessage = (aiError as Error)?.message || 'Unknown error'
       return NextResponse.json(
-        { error: 'AI 이미지 분석 중 오류가 발생했습니다. 다시 시도해주세요.' },
+        {
+          error: 'AI 이미지 분석 중 오류가 발생했습니다. 다시 시도해주세요.',
+          details: errorMessage
+        },
         { status: 500 }
       )
     }
