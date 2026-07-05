@@ -1,6 +1,6 @@
 'use client'
 
-import { Clock, ChefHat, Edit2, Trash2, MoreHorizontal } from 'lucide-react'
+import { Clock, ChefHat, Edit2, Trash2, MoreHorizontal, Star } from 'lucide-react'
 import { Menu, Transition } from '@headlessui/react'
 import { Fragment } from 'react'
 import { cn } from '@/lib/utils'
@@ -12,9 +12,10 @@ interface RecipeCardProps {
   onEdit?: (recipe: Recipe) => void
   onDelete?: (recipe: Recipe) => void
   onClick?: (recipe: Recipe) => void
+  onToggleFavorite?: (recipe: Recipe) => void
 }
 
-export default function RecipeCard({ recipe, className, onEdit, onDelete, onClick }: RecipeCardProps) {
+export default function RecipeCard({ recipe, className, onEdit, onDelete, onClick, onToggleFavorite }: RecipeCardProps) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ko-KR', {
       year: 'numeric',
@@ -71,6 +72,26 @@ export default function RecipeCard({ recipe, className, onEdit, onDelete, onClic
             {recipe.title}
           </h3>
           <div className="flex items-center space-x-2">
+            {onToggleFavorite && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onToggleFavorite(recipe)
+                }}
+                className="p-1.5 rounded-full hover:bg-yellow-50 active:bg-yellow-100 transition-colors cursor-pointer touch-manipulation"
+                aria-label={recipe.favorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                data-menu
+              >
+                <Star
+                  className={cn(
+                    'w-5 h-5 transition-colors',
+                    recipe.favorite
+                      ? 'fill-yellow-400 text-yellow-400'
+                      : 'text-gray-300 hover:text-yellow-400'
+                  )}
+                />
+              </button>
+            )}
             {getSourceBadge(recipe.source_type)}
             {(onEdit || onDelete) && (
               <Menu as="div" className="relative" data-menu>

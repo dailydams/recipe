@@ -9,12 +9,13 @@ import { cn } from '@/lib/utils'
 interface AddRecipeModalProps {
   isOpen: boolean
   onClose: () => void
+  onRecipeAdded: () => void
 }
 
 type Tab = 'image' | 'manual'
 type Category = '전체' | '소담' | '어른'
 
-export default function AddRecipeModal({ isOpen, onClose }: AddRecipeModalProps) {
+export default function AddRecipeModal({ isOpen, onClose, onRecipeAdded }: AddRecipeModalProps) {
   const [activeTab, setActiveTab] = useState<Tab>('image')
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -48,13 +49,9 @@ export default function AddRecipeModal({ isOpen, onClose }: AddRecipeModalProps)
         throw new Error(data.error || 'Failed to process image')
       }
 
-      console.log('Recipe extracted successfully:', data.recipe)
-
-      // Close modal after processing
-      handleClose()
-
-      // Refresh the page to show new recipe
-      window.location.reload()
+      // Close modal and refresh the recipe list
+      resetAndClose()
+      onRecipeAdded()
     } catch (err) {
       console.error('Error processing image:', err)
       setError(err instanceof Error ? err.message : 'Failed to process image. Please try again.')
@@ -154,8 +151,8 @@ export default function AddRecipeModal({ isOpen, onClose }: AddRecipeModalProps)
         throw new Error(data.error || '레시피 저장에 실패했습니다.')
       }
 
-      handleClose()
-      window.location.reload()
+      resetAndClose()
+      onRecipeAdded()
     } catch (err) {
       console.error('Error saving recipe:', err)
       setError(err instanceof Error ? err.message : '레시피 저장에 실패했습니다.')
@@ -164,8 +161,7 @@ export default function AddRecipeModal({ isOpen, onClose }: AddRecipeModalProps)
     }
   }
 
-  const handleClose = () => {
-    if (isProcessing) return
+  const resetAndClose = () => {
     setError(null)
     setActiveTab('image')
     setSelectedCategory('전체')
@@ -173,6 +169,11 @@ export default function AddRecipeModal({ isOpen, onClose }: AddRecipeModalProps)
     setIngredients('')
     setInstructions([''])
     onClose()
+  }
+
+  const handleClose = () => {
+    if (isProcessing) return
+    resetAndClose()
   }
 
   const switchTab = (tab: Tab) => {

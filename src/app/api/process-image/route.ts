@@ -7,13 +7,6 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || '')
 
 export async function POST(request: NextRequest) {
   try {
-    // Debug logging for environment variables
-    console.log('Environment check:', {
-      hasGoogleApiKey: !!process.env.GOOGLE_API_KEY,
-      keyLength: process.env.GOOGLE_API_KEY?.length || 0,
-      keyPrefix: process.env.GOOGLE_API_KEY?.substring(0, 10) || 'none'
-    })
-
     // Check if API key is configured
     if (!process.env.GOOGLE_API_KEY || process.env.GOOGLE_API_KEY === 'your-gemini-api-key-here') {
       return NextResponse.json(
@@ -97,8 +90,6 @@ export async function POST(request: NextRequest) {
       const response = await result.response
       const text = response.text()
 
-      console.log('Gemini response:', text)
-
       // Parse JSON response
       let recipeData
       try {
@@ -113,37 +104,37 @@ export async function POST(request: NextRequest) {
         )
       }
 
+      // Normalize extracted data (Gemini may return non-array or non-string values)
+      const toStringArray = (value: unknown): string[] =>
+        Array.isArray(value)
+          ? value.map(item => String(item).trim()).filter(Boolean)
+          : []
+
+      const title = typeof recipeData.title === 'string' ? recipeData.title.trim() : ''
+      const ingredients = toStringArray(recipeData.ingredients)
+      const instructions = toStringArray(recipeData.instructions)
+
       // Validate extracted data
-      if (!recipeData.title && (!recipeData.ingredients || recipeData.ingredients.length === 0)) {
+      if (!title && ingredients.length === 0) {
         return NextResponse.json(
           { error: '이미지에서 레시피 정보를 찾을 수 없습니다. 레시피가 포함된 이미지를 업로드해주세요.' },
           { status: 404 }
         )
       }
 
-      // Set default title if empty
-      if (!recipeData.title) {
-        recipeData.title = '이름 없는 레시피'
-      }
-
-      // Ensure arrays exist
-      recipeData.ingredients = recipeData.ingredients || []
-      recipeData.instructions = recipeData.instructions || []
-
-      console.log('Extracted recipe data:', {
-        title: recipeData.title,
-        ingredientCount: recipeData.ingredients.length,
-        instructionCount: recipeData.instructions.length
-      })
+      const validCategories = ['전체', '소담', '어른'] as const
+      const safeCategory = (validCategories as readonly string[]).includes(category)
+        ? (category as '전체' | '소담' | '어른')
+        : '전체'
 
       // Save to Google Sheets
       const savedRecipe = await addRecipe({
-        title: recipeData.title,
-        ingredients: recipeData.ingredients,
-        instructions: recipeData.instructions,
+        title: title || '이름 없는 레시피',
+        ingredients,
+        instructions,
         source: `gemini_${Date.now()}.${image.name.split('.').pop()}`,
         source_type: 'image',
-        category: category as '전체' | '소담' | '어른',
+        category: safeCategory,
       })
 
       if (!savedRecipe) {

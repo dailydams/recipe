@@ -18,6 +18,8 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      // Root-level utility/debug scripts (not part of the app)
+      "*.js",
     ],
   },
 ];

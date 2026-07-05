@@ -2,11 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getRecipes, addRecipe } from '@/lib/google-sheets'
 
 export async function GET() {
-    console.log('GET /api/recipes called')
     try {
-        console.log('Calling getRecipes()...')
         const recipes = await getRecipes()
-        console.log('getRecipes returned:', recipes ? recipes.length : 'null')
 
         // Sort by created_at desc
         recipes.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())

@@ -11,6 +11,7 @@ export default function Home() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('전체')
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   return (
     <div className="min-h-screen bg-gray-50/50">
@@ -65,16 +66,18 @@ export default function Home() {
         />
 
         {/* Recipe Grid */}
-        <RecipeGrid 
-          searchQuery={searchQuery} 
+        <RecipeGrid
+          searchQuery={searchQuery}
           selectedCategory={selectedCategory}
+          refreshTrigger={refreshTrigger}
         />
       </main>
 
       {/* Add Recipe Modal */}
-      <AddRecipeModal 
+      <AddRecipeModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
+        onRecipeAdded={() => setRefreshTrigger(prev => prev + 1)}
       />
     </div>
   )
